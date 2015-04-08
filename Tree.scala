@@ -15,19 +15,19 @@ object SplayTree {
     }
     
     def contains(v: Int):Boolean = {
-      require(isBinSearchTree())
+      require(isBinSearchTree(Int.MinValue, Int.MaxValue))
       this match {
         case Leaf => false
         case Node(l, x, r) =>
           if (v == x) true
           else if (v < x) l.contains(v)
           else r.contains(v)
-      }
+      } ensuring(res.isBinSearchTree(Int.MinValue, Int.MaxValue))
     }
     
-    def isBinSearchTree(min:Int = Int.MinValue, max:Int = Int.MaxValue):Boolean = this match {
+    def isBinSearchTree(min:Int, max:Int):Boolean = this match {
       case Leaf => true
-      case Node(l,v,r) =>
+      case Node(l, v, r) =>
         (v > min) && (v < max) && l.isBinSearchTree(min, v) && r.isBinSearchTree(v, max)
     }
     
@@ -57,23 +57,61 @@ object SplayTree {
     }
     
     def splay(v:Int):Tree = {
-      require(contains(v) && isBinSearchTree(Int.MinValue, Int.MaxValue))
+      //require(contains(v) && isBinSearchTree(Int.MinValue, Int.MaxValue))
       this match {
-        case Leaf => Leaf //by definition
-        case Node(l, x, r) if (v == x) => this //already at root
-        case Node(l, x, r) if (v < x )
-        //l zig:
-        case Node(Node(a, x, b), p, c) if (v == x) => Node(a, x, Node(b, p, c))
-        //l zig-zig:
-        case Node(Node(Node(a, x, b), p, c), g, d) if (v == x) => Node(a, x, Node(b, p, Node(c, g, d)))
-        //l zig-zag:
-        case Node(Node(a, p, Node(b, x, c)), g, d) if (v == x) => Node(Node(a, p, b), x, Node(c, g, d))
-        case Node(l, x, r) =>
-          if (v < x) {
-            l.
-          } else { //(x < v)
-            
+        case Leaf => Leaf //nothing to splay
+        case n @ Node(l, x, r) =>
+          if (v == x) n
+          else if (v < x) {
+            l match {
+              case Leaf => Node(l, x, r) //there is nothing smaller -> return parent
+              case Node(ll, lx, lr) =>
+                if (v == lx) Node(ll, v, Node(lr, x, r))
+                else if (v < lx) {
+                  ll match {
+                    case Leaf => Node(ll, lx, Node(lr, x, r))
+                    case _ => ll.splay(v) match {
+                      case Node(lll, llx, llr) => Node(lll, llx, Node(llr, lx, Node(lr, x, r)))
+                      //case else?
+                    }
+                  }
+                }
+                else {
+                  lr match {
+                    case Leaf => Node(ll, lx, Node(lr, x, r))
+                    case _ => lr.splay(v) match {
+                      case Node(lrl, lrx, lrr) => Node(Node(ll, lx, lrl), lrx, Node(lrr, x, r))
+                      //case else?
+                    }
+                  }
+                }
+            }
+          } else {
+            r match {
+              case Leaf => Node(l, x, r)
+              case Node(rl, rx, rr) => 
+                if (v == rx) {
+                  Node(Node(l,x,rl), v, rr)
+                } else if (v < rx) {
+                  rl match {
+                    case Leaf => Node(Node(l, x, rl), rx, rr)
+                    case _ => rl.splay(v) match {
+                      case Node(rll, rlx, rlr) => Node(Node(l, x, rll), rlx, Node(rlr, rx, rr))
+                      //case else? 
+                    }
+                  }
+                } else {
+                  rr match {
+                    case Leaf => Node(Node(l,x,rl),rx,rr)
+                    case _ => rr.splay(v) match {
+                      case Node(rrl, rrx, rrr) => Node(Node(Node(l, x, rl), rx, rrl), rrx, rrr)
+                      //case else?
+                    }
+                  }
+                }
+            }
           }
+            
       }
     }
     
