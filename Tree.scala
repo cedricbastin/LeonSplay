@@ -9,10 +9,10 @@ import leon.annotation._
 object SplayTree {
   abstract class Tree {
     
-    def maxSize(n:Int):Boolean = this match {
-      case Leaf => true
-      case Node(r, v, l) => (n > 0) || (l.maxSize(n-1) && r.maxSize(n-1))
-    }
+    // def maxSize(n:Int):Boolean = this match {
+    //   case Leaf => true
+    //   case Node(r, v, l) => (n > 0) || (l.maxSize(n-1) && r.maxSize(n-1))
+    // }
     
     def contains(v: Int):Boolean = {
       require(isBinSearchTree(Int.MinValue, Int.MaxValue))
@@ -31,30 +31,30 @@ object SplayTree {
         (v > min) && (v < max) && l.isBinSearchTree(min, v) && r.isBinSearchTree(v, max)
     }
     
-    def add(x:Int):Tree = this.addBinary(x).splay(x)
-    def addBinary(x:Int):Tree = this match {
-      case Leaf => Node(Leaf, x, Leaf)
-      case n@Node(l, v, r) if (x == v) => n
-      case Node(l, v, r) if (x < v) => Node(l.addBinary(x), v, r)
-      case Node(l, v, r) if (x > v) => Node(l, v, r.addBinary(x))
-    } //ensuring { res => res.isBinSearchTree() }
+    // def add(x:Int):Tree = this.addBinary(x).splay(x)
+    // def addBinary(x:Int):Tree = this match {
+    //   case Leaf => Node(Leaf, x, Leaf)
+    //   case n@Node(l, v, r) if (x == v) => n
+    //   case Node(l, v, r) if (x < v) => Node(l.addBinary(x), v, r)
+    //   case Node(l, v, r) if (x > v) => Node(l, v, r.addBinary(x))
+    // } //ensuring { res => res.isBinSearchTree() }
     
-    def remove(x:Int):Tree = {
-      this
-    }
+    // def remove(x:Int):Tree = {
+    //   this
+    // }
     
-    def join(that:Tree):Tree = {
-      this
-    }
+    // def join(that:Tree):Tree = {
+    //   this
+    // }
     
-    def split(x:Int):(Tree, Tree) = {
-      require(contains(x))
-      splay(x) match {
-        case Leaf => (Leaf, Leaf) //should never happen
-        case Node(l, v, r) if (v == x) => (Node(l, v, Leaf), r)
-        case Node(l, v, r) => (l, Node(Leaf, v, r)) //if splay returned parent
-      }
-    }
+    // def split(x:Int):(Tree, Tree) = {
+    //   require(contains(x))
+    //   splay(x) match {
+    //     case Leaf => (Leaf, Leaf) //should never happen
+    //     case Node(l, v, r) if (v == x) => (Node(l, v, Leaf), r)
+    //     case Node(l, v, r) => (l, Node(Leaf, v, r)) //if splay returned parent
+    //   }
+    // }
     
     def splay(v:Int):Tree = {
       //require(contains(v) && isBinSearchTree(Int.MinValue, Int.MaxValue))
