@@ -6,30 +6,10 @@ import leon.annotation._
  * } ensuring { res => ... }
  **/
 
-object PackedSet {
-  case class Range(min: Int, max: Int) {
-    def size: Int = {
-      require(min < max)
-      if (max >= min) max-min+1
-      else 0
-    }
-  }
-}
-
-
 object SplayTree {
-  sealed abstract class OptInt {
-    def <(a:Int):Boolean
-    def >(a:Int):Boolean
-  }
-  case class Some(i:Int) extends OptInt {
-    def <(a:Int):Boolean = {i < a}
-    def >(a:Int):Boolean = {i > a}
-  }
-  case object None extends OptInt {
-    def <(a:Int):Boolean = {true}
-    def >(a:Int):Boolean = {true}
-  }
+  sealed abstract class OptInt
+  case class Some(i:Int) extends OptInt
+  case object None extends OptInt
 
   abstract class Tree
   case class Node(l:Tree, v:Int, r:Tree) extends Tree
@@ -38,7 +18,7 @@ object SplayTree {
   //to limit the size of the trees to examine
   def maxSize(tree:Tree, n:Int):Boolean = tree match {
     case Leaf => true
-    case Node(r, v, l) => (n > 0) && (maxSize(l, n-1) && maxSize(r, n-1))
+    case Node(r, v, l) => (n > 0) && maxSize(l, n-1) && maxSize(r, n-1)
   }
 
   def contains(tree:Tree, v: Int):Boolean = {
@@ -53,25 +33,7 @@ object SplayTree {
   }
 
   //current impl
-  def isSorted(tree:Tree):Boolean = isSortedAcc(tree, true, None, None)
-
-  //4.tail recursive
-  def isSortedAcc(tree:Tree, bFlag:Boolean, min:OptInt, max:OptInt):Boolean = tree match {
-    case Leaf => true
-    case Node(l, v, r) =>
-      if (!bFlag) false
-      else isSortedAcc(r, isSortedAcc(l, (min < v && max > v), min, Some(v)), Some(v), max)
-  }
-
-  // 3.Optional boundaries better impl 
-  def isSortedOB2(tree:Tree, min:OptInt, max:OptInt):Boolean = tree match {
-    case Leaf => true
-    case Node(l, v, r) =>
-      if (!(min < v)) false
-      else if (!(max > v)) false
-      else if (!isSortedOB2(l, min, Some(v))) false
-      else isSortedOB2(r, Some(v), max)
-  }
+  def isSorted(tree:Tree):Boolean = isSortedOB(tree, None, None)
 
   // 2.Optional boundaries  
   def isSortedOB(tree:Tree, min:OptInt, max:OptInt):Boolean = tree match {
