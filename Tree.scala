@@ -15,6 +15,31 @@ object SplayTree {
   case class Node(l:Tree, v:Int, r:Tree) extends Tree
   case object Leaf extends Tree
 
+  def add(tree: Tree, x:Int):Tree = tree match {
+    case Leaf => Node(Leaf, x, Leaf)
+    case n@Node(l, v, r) if (x == v) => n
+    case Node(l, v, r) if (x < v) => Node(add(l, x), v, r)
+    case Node(l, v, r) if (x > v) => Node(l, v, add(r, x))
+  } //ensuring { res => res.isBinSearchTree() }
+
+  def remove(tree:Tree, x:Int):Tree = {
+    tree //TODO
+  }
+
+  def join(tree:Tree, that:Tree):Tree = {
+    tree //TODO
+  }
+
+  def split(tree:Tree, x:Int):(Tree, Tree) = {
+    // require(contains(x))
+    // splay(x) match {
+    //   case Leaf => (Leaf, Leaf) //should never happen
+    //   case Node(l, v, r) if (v == x) => (Node(l, v, Leaf), r)
+    //   case Node(l, v, r) => (l, Node(Leaf, v, r)) //if splay returned parent
+    // }
+    (tree, tree)
+  }
+
   //to limit the size of the trees to examine
   def maxSize(tree:Tree, n:Int):Boolean = tree match {
     case Leaf => true
@@ -53,31 +78,6 @@ object SplayTree {
     case Node(l, v, r) =>
       (v > min) && (v < max) && isSortedBasic(l, min, v) && isSortedBasic(r, v, max)
   }
-
-  // def add(x:Int):Tree = this.addBinary(x).splay(x)
-  // def addBinary(x:Int):Tree = this match {
-  //   case Leaf => Node(Leaf, x, Leaf)
-  //   case n@Node(l, v, r) if (x == v) => n
-  //   case Node(l, v, r) if (x < v) => Node(l.addBinary(x), v, r)
-  //   case Node(l, v, r) if (x > v) => Node(l, v, r.addBinary(x))
-  // } //ensuring { res => res.isBinSearchTree() }
-
-  // def remove(x:Int):Tree = {
-  //   this
-  // }
-
-  // def join(that:Tree):Tree = {
-  //   this
-  // }
-
-  // def split(x:Int):(Tree, Tree) = {
-  //   require(contains(x))
-  //   splay(x) match {
-  //     case Leaf => (Leaf, Leaf) //should never happen
-  //     case Node(l, v, r) if (v == x) => (Node(l, v, Leaf), r)
-  //     case Node(l, v, r) => (l, Node(Leaf, v, r)) //if splay returned parent
-  //   }
-  // }
 
   def splay(tree:Tree, v:Int):Tree = {
     require(maxSize(tree, 5) )//&& isSorted(tree, Int.MinValue, Int.MaxValue))
