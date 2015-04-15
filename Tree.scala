@@ -7,46 +7,74 @@ import leon.annotation._
  **/
 
 object SplayTree {
-  sealed abstract class OptInt
-  case class Some(i:Int) extends OptInt
+  val minVal = BigInt(0)
+  val maxVal = BigInt(100)
+  
+  sealed abstract class OptInt {
+    def <(that:BigInt) = this match {
+      case None => true
+      case Some(x) => x < that
+    }
+    def <=(that:BigInt) = this match {
+      case None => true
+      case Some(x) => x <= that
+    }
+    def >(that:BigInt) = this match {
+      case None => true
+      case Some(x) => x > that
+    }
+    def >=(that:BigInt) = this match {
+      case None => true
+      case Some(x) => x >= that
+    }
+  }
+  case class Some(i:BigInt) extends OptInt
   case object None extends OptInt
 
   abstract class Tree
-  case class Node(l:Tree, v:Int, r:Tree) extends Tree
+  case class Node(l:Tree, v:BigInt, r:Tree) extends Tree
   case object Leaf extends Tree
 
-  def add(tree: Tree, x:Int):Tree = tree match {
-    case Leaf => Node(Leaf, x, Leaf)
-    case n@Node(l, v, r) if (x == v) => n
-    case Node(l, v, r) if (x < v) => Node(add(l, x), v, r)
-    case Node(l, v, r) if (x > v) => Node(l, v, add(r, x))
-  } //ensuring { res => res.isBinSearchTree() }
+  def add(tree: Tree, x:BigInt):Tree = {
+    require(isSorted(tree) && x >= minVal && x <= maxVal)
+    tree match {
+      case Leaf => Node(Leaf, x, Leaf)
+      case Node(l, v, r) if (x == v) => Leaf//tree //nothing to add if already exists
+      case Node(l, v, r) if (x < v) => Leaf//Node(add(l, x), v, r)
+      case Node(l, v, r) if (x > v) => Leaf//Node(l, v, add(r, x))
+    }
+  } ensuring {res => isSorted(res)}
+  
 
-  def remove(tree:Tree, x:Int):Tree = {
-    tree //TODO
+  def remove(tree:Tree, x:BigInt):Tree = {
+    require(isSorted(tree))
+    // splay(tree, x) match {
+    //   case Node(l,v,r) if (v == x) => join(l, r)
+    //   case n => n //leaf or node whith v != x
+    // }
+    val s = split(tree, x)
+    join(s._1, s._2)
   }
 
   def join(tree:Tree, that:Tree):Tree = {
     tree //TODO
   }
 
-  def split(tree:Tree, x:Int):(Tree, Tree) = {
-    // require(contains(x))
-    // splay(x) match {
-    //   case Leaf => (Leaf, Leaf) //should never happen
-    //   case Node(l, v, r) if (v == x) => (Node(l, v, Leaf), r)
-    //   case Node(l, v, r) => (l, Node(Leaf, v, r)) //if splay returned parent
-    // }
-    (tree, tree)
+  def split(tree:Tree, x:BigInt):(Tree, Tree) = {
+    require(isSorted(tree))
+    splay(tree, x) match {
+      case Node(l,v,r) if (x == v) => (l, r)
+      case n => (n, Leaf) //leaf flags that the element was not found
+    }
   }
 
   //to limit the size of the trees to examine
-  def maxSize(tree:Tree, n:Int):Boolean = tree match {
+  def maxSize(tree:Tree, n:BigInt):Boolean = tree match {
     case Leaf => true
     case Node(r, v, l) => (n > 0) && maxSize(l, n-1) && maxSize(r, n-1)
   }
 
-  def contains(tree:Tree, v: Int):Boolean = {
+  def contains(tree:Tree, v:BigInt):Boolean = {
     require(isSorted(tree)) //work for range 1 -> 10
     tree match {
       case Leaf => false
@@ -57,30 +85,37 @@ object SplayTree {
     }
   }
 
-  //current impl
-  def isSorted(tree:Tree):Boolean = isSortedOB(tree, None, None)
+  //current implementation of isSorted
+  def isSorted(tree:Tree):Boolean = {
+    //isSortedOB(tree, None, None)
+    isSortedBURec(tree).sorted
+  }
+  
+  case class SResult(min:BigInt, sorted:Boolean, max:BigInt)
+  
+  //bottum-up "inductive"
+  def isSortedBURec(tree:Tree):SResult = tree match {
+    case Leaf => SResult(minVal, true, maxVal)
+    case Node(l, v, r) =>
+      val lx = isSortedBURec(l)
+      val rx = isSortedBURec(r)
+      SResult(lx.min, (lx.sorted && rx.sorted && (lx.min < v) && (v < rx.max)), rx.max)
+  }
 
-  // 2.Optional boundaries  
-  def isSortedOB(tree:Tree, min:OptInt, max:OptInt):Boolean = tree match {
+  //top down "recursive"  
+  def isSortedTD(tree:Tree, min:OptInt, max:OptInt):Boolean = tree match {
     case Leaf => true
     case Node(l, vi, r) =>
       (min, max) match {
-        case (None, None) => val v = Some(vi); isSortedOB(l, min, v) && isSortedOB(r, v, max)
-        case (Some(mi), None) => val v = Some(vi); (vi > mi) && isSortedOB(l, min, v) && isSortedOB(r, v, max)
-        case (None, Some(ma)) => val v = Some(vi); (vi < ma) && isSortedOB(l, min, v) && isSortedOB(r, v, max)
-        case (Some(mi), Some(ma)) => val v = Some(vi); (vi > mi) && (vi < ma) && isSortedOB(l, min, v) && isSortedOB(r, v, max)
+        case (None, None) => val v = Some(vi); isSortedTD(l, min, v) && isSortedTD(r, v, max)
+        case (Some(mi), None) => val v = Some(vi); (vi > mi) && isSortedTD(l, min, v) && isSortedTD(r, v, max)
+        case (None, Some(ma)) => val v = Some(vi); (vi < ma) && isSortedTD(l, min, v) && isSortedTD(r, v, max)
+        case (Some(mi), Some(ma)) => val v = Some(vi); (vi > mi) && (vi < ma) && isSortedTD(l, min, v) && isSortedTD(r, v, max)
       }
   }
 
-  // 1.First Algo
-  def isSortedBasic(tree:Tree,min:Int, max:Int):Boolean = tree match {
-    case Leaf => true
-    case Node(l, v, r) =>
-      (v > min) && (v < max) && isSortedBasic(l, min, v) && isSortedBasic(r, v, max)
-  }
-
-  def splay(tree:Tree, v:Int):Tree = {
-    require(maxSize(tree, 5) )//&& isSorted(tree, Int.MinValue, Int.MaxValue))
+  def splay(tree:Tree, v:BigInt):Tree = {
+    require(maxSize(tree, 5) && isSorted(tree)) //&& isSorted(tree, Int.MinValue, Int.MaxValue))
     tree match {
       case Leaf => Leaf //nothing to splay
       case n @ Node(l, x, r) =>
