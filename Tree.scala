@@ -192,7 +192,7 @@ object SplayTree {
   }
 
   def splay(tree:Tree, v:BigInt):Tree = {
-    //require(isSorted(tree)) //&& isSorted(tree, Int.MinValue, Int.MaxValue))
+    require(isSorted(tree)) //&& isSorted(tree, Int.MinValue, Int.MaxValue))
     tree match {
       case Leaf => Leaf //nothing to splay
       case n @ Node(l, x, r) =>
@@ -254,34 +254,37 @@ object SplayTree {
     require(isSorted(tree))
     tree match {
       case Leaf => Leaf
-      case Node(l, x, r) if (x == v) => tree //nothing to splay
-      case Node(Leaf, x, r) if (v < x) => tree //splay parent simply
-      case Node(l, x, Leaf) if (x < v) => tree 
-      case Node(Leaf, x, Leaf) => tree //nothing to splay, this is the "parent"
-      //in left 
-      case Node(Node(a, x, b), p, c) if (x == v) => Node(a, x, Node(b, p, c)) //zig left = if the node is at depth 1
-      case Node(Node(a@Leaf, x, b), p, c) if (v < x) => Node(a, x, Node(b, p, c))
-      case Node(Node(a, x, b@Leaf), p, c) if (x < v && v < p) => Node(a, x, Node(b, p, c))
-      case Node(Node(Node(a, x, b), p, c), g, d) if (x == v) => Node(a, x, Node(b, p, Node(c, g, d))) //zig-zig left
-      case Node(Node(xNode, p, c), g, d) if (v < p) => splay2(xNode, v) match {
-        case Node(a, x, b) => Node(a, x, Node(b, p, Node(c, g, d)))
+      case Node(l, x, r)                          if (x == v)         => tree //already root
+      case Node(Leaf, x, r)                       if (v < x)          => tree //parent
+      case Node(l, x, Leaf)                       if (x < v)          => tree //parent
+      case Node(Leaf, x, Leaf)                                        => tree //nothing to splay
+      //zig
+      case Node(Node(a, x, b), p, c)              if (x == v)         => Node(a, x, Node(b, p, c)) //zig left = if the node is at depth 1
+      case Node(Node(a@Leaf, x, b), p, c)         if (v < x)          => Node(a, x, Node(b, p, c))
+      case Node(Node(a, x, b@Leaf), p, c)         if (x < v && v < p) => Node(a, x, Node(b, p, c))
+      //zag
+      case Node(c, p, Node(b, x, a))              if (x == v)         => Node(Node(c, p, b), x, a) //zag right
+      case Node(c, p, Node(b, x, a@Leaf))         if (x < v)          => Node(Node(c, p, b), x, a)
+      case Node(c, p, Node(b@Leaf, x, a))         if (p < v && v < x) => Node(Node(c, p, b), x, a)
+      //zig-zig
+      case Node(Node(Node(a, x, b), p, c), g, d)  if (x == v)         => Node(a, x, Node(b, p, Node(c, g, d))) //zig-zig left
+      case Node(Node(xNode, p, c), g, d)          if (v < p)          => splay2(xNode, v) match {
+        case Node(a, x, b)                                            => Node(a, x, Node(b, p, Node(c, g, d)))
       }
-      case Node(Node(a, p, Node(b, x, c)), g, d) if (x == v) => Node(Node(a, p, b), x, Node(c, g, d)) //zig-zag left
-      case Node(Node(a, p, xNode), g, d) if (p < v && v < g) => splay(xNode, v) match {
-        case Node(b, x, c) => Node(Node(a, p, b), x, Node(c, g, d))
+      case Node(Node(a, p, Node(b, x, c)), g, d)  if (x == v)         => Node(Node(a, p, b), x, Node(c, g, d)) //zig-zag left
+      case Node(Node(a, p, xNode), g, d)          if (p < v && v < g) => splay(xNode, v) match {
+        case Node(b, x, c)                                            => Node(Node(a, p, b), x, Node(c, g, d))
       }
       //left recursive
       //verify the following still!
-      case Node(c, p, Node(b, x, a)) if (x == v) => Node(Node(c, p, b), x, a) //zag right
-      case Node(c, p, Node(b, x, a@Leaf)) if (x < v) => Node(Node(c, p, b), x, a)
-      case Node(c, p, Node(b@Leaf, x, a)) if (p < v && v < x) => Node(Node(c, p, b), x, a)
-      case Node(d, g, Node(c, p, Node(b, x, a))) if (x == v) => Node(Node(Node(d, g, c), p, b), x, a) //zag-zag right
-      case Node(d, g, Node(c, p, xNode)) if (g < v && v < p) => splay2(xNode,v) match {
-        case Node(b, x, a) => Node(Node(Node(d, g, c), p, b), x, a)
+      
+      case Node(d, g, Node(c, p, Node(b, x, a)))  if (x == v)         => Node(Node(Node(d, g, c), p, b), x, a) //zag-zag right
+      case Node(d, g, Node(c, p, xNode))          if (g < v && v < p) => splay2(xNode,v) match {
+        case Node(b, x, a)                                            => Node(Node(Node(d, g, c), p, b), x, a)
       }
-      case Node(d, g, Node(Node(c, x, b), p, a)) if (x == v) => Node(Node(d, g, c), x, Node(b, p, a)) //zag-zig right
-      case Node(d, g, Node(xNode, p, a)) if (p < v) => splay2(xNode, v) match {
-        case Node(c, x, b) => Node(Node(d, g, c), x, Node(b, p, a))
+      case Node(d, g, Node(Node(c, x, b), p, a))  if (x == v)         => Node(Node(d, g, c), x, Node(b, p, a)) //zag-zig right
+      case Node(d, g, Node(xNode, p, a))          if (p < v)          => splay2(xNode, v) match {
+        case Node(c, x, b)                                            => Node(Node(d, g, c), x, Node(b, p, a))
       }
     }
   }
