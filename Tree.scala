@@ -1,6 +1,9 @@
+//import leon._
 import leon.lang._
 import leon.lang.synthesis._
 import leon.annotation._
+//import leon.collection._
+
 /**
  * { require(this.isPackedSet)
  * } ensuring { res => ... }
@@ -8,7 +11,7 @@ import leon.annotation._
 
 object SplayTree {
   val minVal = BigInt(0)
-  val maxVal = BigInt(100)
+  val maxVal = BigInt(10000)
   
   sealed abstract class OptInt {
     def <(that:BigInt) = this match {
@@ -30,31 +33,55 @@ object SplayTree {
   }
   case class Some(i:BigInt) extends OptInt
   case object None extends OptInt
+  
+  def debug(tree: Tree):Boolean = {
+    error[Unit]("wrong tree: ")
+    true
+  }
+  
+  // def lessThan(a: OptInt, b: OptInt):Boolean = (a,b) match {
+  //   case (None, _) => true //good?
+  //   case (_, None) => true //good?
+  //   case (Some(aa), Some(bb)) => (aa < bb)
+  // }
+  
+  // def greaterThan(a: OptInt, b: OptInt):Boolean = (a,b) match {
+  //   case (None, _) => true
+  //   case (_, None) => true
+  //   case (Some(aa), Some(bb)) => (aa < bb)
+  // }
+  
+  def max(a: OptInt, b: OptInt):OptInt = (a, b) match {
+    case (None, _) => b
+    case (_, None) => a
+    case (Some(aa), Some(bb)) => if (aa > bb) a else b 
+  }
+  def min(a: OptInt, b: OptInt):OptInt = (a,b) match {
+    case (None, _) => b
+    case (_, None) => a
+    case (Some(aa), Some(bb)) => if (aa < bb) a else b 
+  }
 
   abstract class Tree
   case class Node(l:Tree, v:BigInt, r:Tree) extends Tree
   case object Leaf extends Tree
 
   def add(tree: Tree, x:BigInt):Tree = {
-    require(isSorted(tree) && x >= minVal && x <= maxVal)
+    require(isSorted(tree))// && x > minVal && x < maxVal)
     tree match {
       case Leaf => Node(Leaf, x, Leaf)
-      case Node(l, v, r) if (x == v) => Leaf//tree //nothing to add if already exists
-      case Node(l, v, r) if (x < v) => Leaf//Node(add(l, x), v, r)
-      case Node(l, v, r) if (x > v) => Leaf//Node(l, v, add(r, x))
+      case Node(l, v, r) if (x == v) => tree //nothing to add if already exists
+      case Node(l, v, r) if (x < v) => Node(add(l, x), v, r)
+      case Node(l, v, r) if (x > v) => Node(l, v, add(r, x))
     }
-  } ensuring {res => isSorted(res)}
+  } ensuring {res => contains(res, x) && isSorted(res)}
   
 
   def remove(tree:Tree, x:BigInt):Tree = {
     require(isSorted(tree))
-    // splay(tree, x) match {
-    //   case Node(l,v,r) if (v == x) => join(l, r)
-    //   case n => n //leaf or node whith v != x
-    // }
     val s = split(tree, x)
     join(s._1, s._2)
-  }
+  } ensuring {res => !contains(res, x)}//isSorted(res)}
 
   def join(tree:Tree, that:Tree):Tree = {
     tree //TODO
@@ -75,7 +102,7 @@ object SplayTree {
   }
 
   def contains(tree:Tree, v:BigInt):Boolean = {
-    require(isSorted(tree)) //work for range 1 -> 10
+    //require(isSorted(tree)) //work for range 1 -> 10
     tree match {
       case Leaf => false
       case Node(l, x, r) =>
@@ -85,21 +112,57 @@ object SplayTree {
     }
   }
 
+  //TODO 
+
   //current implementation of isSorted
   def isSorted(tree:Tree):Boolean = {
     //isSortedOB(tree, None, None)
-    isSortedBURec(tree).sorted
+    //isSortedBURec(tree).sorted
+    isSortedTriv(tree)
   }
   
-  case class SResult(min:BigInt, sorted:Boolean, max:BigInt)
+  //supposes that the tree is sorted!!
+  def maxTriv(tree: Tree): OptInt = tree match {
+    case Leaf => None
+    case Node(l,v,Leaf) => Some(v)
+    case Node(l,v,r) => maxTriv(r)
+  }
+  
+  def minTriv(tree: Tree): OptInt = tree match {
+    case Leaf => None
+    case Node(Leaf,v,r) => Some(v)
+    case Node(l,v,r) => minTriv(l)
+  }
+  
+  def isSortedTriv(tree:Tree): Boolean = {
+    tree match {
+      case Leaf => true
+      case Node(l,v,r) =>
+        if (!(maxTriv(l) < v)) false
+        else if (!(minTriv(r) > v)) false
+        else if (isSortedTriv(l) && isSortedTriv(r)) true //lazy evaluation?
+        else {
+          debug(tree) && false
+        }
+    }
+  }
+  
+  case class SResult(min:OptInt, sorted:Boolean, max:OptInt)
   
   //bottum-up "inductive"
   def isSortedBURec(tree:Tree):SResult = tree match {
-    case Leaf => SResult(minVal, true, maxVal)
+    case Leaf => SResult(None, true, None)
     case Node(l, v, r) =>
       val lx = isSortedBURec(l)
-      val rx = isSortedBURec(r)
-      SResult(lx.min, (lx.sorted && rx.sorted && (lx.min < v) && (v < rx.max)), rx.max)
+      if (!lx.sorted)
+        SResult(None, false, None) //propagate false early
+      else {
+        val rx = isSortedBURec(r)
+        if (!rx.sorted)
+          SResult(None, false, None) //propagate false early
+        else
+          SResult(lx.min, (lx.sorted && rx.sorted && (lx.min < v) && (rx.max > v)), rx.max)
+      }
   }
 
   //top down "recursive"  
