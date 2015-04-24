@@ -116,8 +116,8 @@ object SplayTree {
   def isSorted(tree:Tree):Boolean = {
     //isSortedOB(tree, None, None)
     //isSortedBURec(tree).sorted
-    //isSortedTriv(tree)
-    isSortedBuggy(tree)
+    isSortedTriv(tree)
+    //isSortedBuggy(tree)
   }
   
   def isSortedBuggy(tree:Tree): Boolean = {
@@ -125,22 +125,30 @@ object SplayTree {
       case Leaf => true
       case Node(Leaf,               v, Leaf) => true
       case Node(l@Node(ll, vl, rl), v, Leaf) => (vl < v && isSortedBuggy(l))
-      case Node(Leaf,               v, r@Node(lr, vr, rr)) => (v > vr && isSortedBuggy(r))
-      case Node(l@Node(ll, vl, rl), v, r@Node(lr, vr, rr)) => (vl < v && v > vr && isSortedBuggy(l) && isSortedBuggy(r))
+      case Node(Leaf,               v, r@Node(lr, vr, rr)) => (v < vr && isSortedBuggy(r))
+      case Node(l@Node(ll, vl, rl), v, r@Node(lr, vr, rr)) => (vl < v && v < vr && isSortedBuggy(l) && isSortedBuggy(r))
     }
   }
   
-  //supposes that the tree is sorted!!
+  //supposes that the tree is sorted!! might work if we apply the sorting algorithm to each node
   def maxTriv(tree: Tree): OptInt = tree match {
     case Leaf => None
     case Node(l,v,Leaf) => Some(v)
     case Node(l,v,r) => maxTriv(r)
   }
-  
   def minTriv(tree: Tree): OptInt = tree match {
     case Leaf => None
     case Node(Leaf,v,r) => Some(v)
     case Node(l,v,r) => minTriv(l)
+  }
+  //also works on unsorted trees
+  def maxVal(tree: Tree): OptInt = tree match {
+    case Leaf => None
+    case Node(l,v,r) => max(max(maxVal(l), Some(v)), maxVal(r))
+  }
+  def minVal(tree: Tree): OptInt = tree match {
+    case Leaf => None
+    case Node(l,v,r) => min(min(minVal(l), Some(v)), minVal(r))
   }
   
   def isSortedTriv(tree:Tree): Boolean = {
@@ -184,7 +192,7 @@ object SplayTree {
   }
 
   def splay(tree:Tree, v:BigInt):Tree = {
-    require(maxSize(tree, 5) && isSorted(tree)) //&& isSorted(tree, Int.MinValue, Int.MaxValue))
+    //require(isSorted(tree)) //&& isSorted(tree, Int.MinValue, Int.MaxValue))
     tree match {
       case Leaf => Leaf //nothing to splay
       case n @ Node(l, x, r) =>
@@ -240,15 +248,44 @@ object SplayTree {
         }
 
     }
-  } //ensuring {res => isSorted(res, Int.MinValue, Int.MaxValue)}
-
-  def zig = {
-    require (true)
+  } ensuring {res => (content(tree) == content(res)) }//isSorted(res)}
+  
+  def splay2(tree: Tree, v: BigInt):Tree = {
+    require(isSorted(tree))
+    tree match {
+      case Leaf => Leaf
+      case Node(l, x, r) if (x == v) => tree //nothing to splay
+      case Node(Leaf, x, r) if (v < x) => tree //splay parent simply
+      case Node(l, x, Leaf) if (x < v) => tree 
+      case Node(Leaf, x, Leaf) => tree //nothing to splay, this is the "parent"
+      //in left 
+      case Node(Node(a, x, b), p, c) if (x == v) => Node(a, x, Node(b, p, c)) //zig left = if the node is at depth 1
+      case Node(Node(a@Leaf, x, b), p, c) if (v < x) => Node(a, x, Node(b, p, c))
+      case Node(Node(a, x, b@Leaf), p, c) if (x < v && v < p) => Node(a, x, Node(b, p, c))
+      case Node(Node(Node(a, x, b), p, c), g, d) if (x == v) => Node(a, x, Node(b, p, Node(c, g, d))) //zig-zig left
+      case Node(Node(xNode, p, c), g, d) if (v < p) => splay2(xNode, v) match {
+        case Node(a, x, b) => Node(a, x, Node(b, p, Node(c, g, d)))
+      }
+      case Node(Node(a, p, Node(b, x, c)), g, d) if (x == v) => Node(Node(a, p, b), x, Node(c, g, d)) //zig-zag left
+      case Node(Node(a, p, xNode), g, d) if (p < v && v < g) => splay(xNode, v) match {
+        case Node(b, x, c) => Node(Node(a, p, b), x, Node(c, g, d))
+      }
+      //left recursive
+      //verify the following still!
+      case Node(c, p, Node(b, x, a)) if (x == v) => Node(Node(c, p, b), x, a) //zag right
+      case Node(c, p, Node(b, x, a@Leaf)) if (x < v) => Node(Node(c, p, b), x, a)
+      case Node(c, p, Node(b@Leaf, x, a)) if (p < v && v < x) => Node(Node(c, p, b), x, a)
+      case Node(d, g, Node(c, p, Node(b, x, a))) if (x == v) => Node(Node(Node(d, g, c), p, b), x, a) //zag-zag right
+      case Node(d, g, Node(c, p, xNode)) if (g < v && v < p) => splay2(xNode,v) match {
+        case Node(b, x, a) => Node(Node(Node(d, g, c), p, b), x, a)
+      }
+      case Node(d, g, Node(Node(c, x, b), p, a)) if (x == v) => Node(Node(d, g, c), x, Node(b, p, a)) //zag-zig right
+      case Node(d, g, Node(xNode, p, a)) if (p < v) => splay2(xNode, v) match {
+        case Node(c, x, b) => Node(Node(d, g, c), x, Node(b, p, a))
+      }
+    }
   }
 
-  def zigzig = {}
-
-  def zigzag = {}
 
   // def getMinAndRemove:(Int, Tree) = {
   //   require(this match {case n:Node => true case Leaf => false}) //can't remove anything if Leaf
@@ -257,5 +294,12 @@ object SplayTree {
   //     case Node(l, v, r) => l.getMinAndRemove match {case (vn, tn) => (vn, Node(tn, v, r))}
   //     case Leaf => (-1, this)
   //   }
-  // }
+  // 
+  
+  def t2 = require(2 < 1)
+  def testSort1 = t2
+  
+  def t1 = require(add(Node(Node(Leaf, 1, Leaf), 3, Leaf), 2) == Node(Node(Leaf, 1, Node(Leaf, 5, Leaf)), 3, Leaf))
+  def test1 = t1
+  
 }
