@@ -69,26 +69,26 @@ object SplayTree {
       case Node(l, v, r) if (x < v) => Node(add(l, x), v, r)
       case Node(l, v, r) if (x > v) => Node(l, v, add(r, x))
     }
-  } ensuring {res => contains(res, x) && isSorted(res)}
+  } ensuring {res => contains(res, x) && (content(tree)++Set(x) == content(res)) && isSorted(res)} //
   
 
-  def remove(tree:Tree, x:BigInt):Tree = {
-    require(isSorted(tree))
-    val s = split(tree, x)
-    join(s._1, s._2)
-  } ensuring {res => !contains(res, x)}//isSorted(res)}
+  // def remove(tree:Tree, x:BigInt):Tree = {
+  //   require(isSorted(tree))
+  //   val s = split(tree, x)
+  //   join(s._1, s._2)
+  // } ensuring {res => !contains(res, x)}//isSorted(res)}
 
-  def join(tree:Tree, that:Tree):Tree = {
-    tree //TODO
-  }
+  // def join(tree:Tree, that:Tree):Tree = {
+  //   tree //TODO
+  // }
 
-  def split(tree:Tree, x:BigInt):(Tree, Tree) = {
-    require(isSorted(tree))
-    splay(tree, x) match {
-      case Node(l,v,r) if (x == v) => (l, r)
-      case n => (n, Leaf) //leaf flags that the element was not found
-    }
-  }
+  // def split(tree:Tree, x:BigInt):(Tree, Tree) = {
+  //   require(isSorted(tree))
+  //   splay(tree, x) match {
+  //     case Node(l,v,r) if (x == v) => (l, r)
+  //     case n => (n, Leaf) //leaf flags that the element was not found
+  //   }
+  // }
 
   //to limit the size of the trees to examine
   def maxSize(tree:Tree, n:BigInt):Boolean = tree match {
@@ -107,13 +107,27 @@ object SplayTree {
     }
   }
 
-  //TODO 
+  def content(t: Tree) : Set[BigInt] = t match {
+    case Leaf => Set.empty
+    case Node(l, v, r) => content(l) ++ Set(v) ++ content(r)
+  }
 
   //current implementation of isSorted
   def isSorted(tree:Tree):Boolean = {
     //isSortedOB(tree, None, None)
     //isSortedBURec(tree).sorted
-    isSortedTriv(tree)
+    //isSortedTriv(tree)
+    isSortedBuggy(tree)
+  }
+  
+  def isSortedBuggy(tree:Tree): Boolean = {
+    tree match {
+      case Leaf => true
+      case Node(Leaf,               v, Leaf) => true
+      case Node(l@Node(ll, vl, rl), v, Leaf) => (vl < v && isSortedBuggy(l))
+      case Node(Leaf,               v, r@Node(lr, vr, rr)) => (v > vr && isSortedBuggy(r))
+      case Node(l@Node(ll, vl, rl), v, r@Node(lr, vr, rr)) => (vl < v && v > vr && isSortedBuggy(l) && isSortedBuggy(r))
+    }
   }
   
   //supposes that the tree is sorted!!
