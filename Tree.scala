@@ -34,11 +34,6 @@ object SplayTree {
   case class Some(i:BigInt) extends OptInt
   case object None extends OptInt
   
-  def debug(tree: Tree):Boolean = {
-    error[Unit]("wrong tree: ")
-    true
-  }
-  
   // def lessThan(a: OptInt, b: OptInt):Boolean = (a,b) match {
   //   case (None, _) => true //good?
   //   case (_, None) => true //good?
@@ -140,10 +135,7 @@ object SplayTree {
       case Node(l,v,r) =>
         if (!(maxTriv(l) < v)) false
         else if (!(minTriv(r) > v)) false
-        else if (isSortedTriv(l) && isSortedTriv(r)) true //lazy evaluation?
-        else {
-          debug(tree) && false
-        }
+        else isSortedTriv(l) && isSortedTriv(r) //lazy evaluation?
     }
   }
   
