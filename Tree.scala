@@ -10,11 +10,9 @@ import leon.annotation._
  **/
 
 object SplayTree {
-  //limit the range for "easieræ checking
-  //val minVal = BigInt(0)
-  //val maxVal = BigInt(10000)
+  val minVal = BigInt(0)
+  val maxVal = BigInt(10000)
   
-  //helper class to deal with infinite ranges
   sealed abstract class OptInt {
     def <(that:BigInt) = this match {
       case None => true
@@ -34,14 +32,14 @@ object SplayTree {
     }
   }
   case class Some(i:BigInt) extends OptInt
-  case object None extends OptInt // represent -infinity and +infinity
+  case object None extends OptInt
   
-  //helper functions
   // def lessThan(a: OptInt, b: OptInt):Boolean = (a,b) match {
   //   case (None, _) => true //good?
   //   case (_, None) => true //good?
   //   case (Some(aa), Some(bb)) => (aa < bb)
   // }
+  
   // def greaterThan(a: OptInt, b: OptInt):Boolean = (a,b) match {
   //   case (None, _) => true
   //   case (_, None) => true
@@ -59,27 +57,19 @@ object SplayTree {
     case (Some(aa), Some(bb)) => if (aa < bb) a else b 
   }
 
-  //The main datastructure for the Splay Tree is the same than
-  //we don't use the more complicated version with back-references to the parents
   abstract class Tree
   case class Node(l:Tree, v:BigInt, r:Tree) extends Tree
   case object Leaf extends Tree
-  //could also have used: case class Leaf(v:BigInt)
-  
-  def addSplay(tree:Tree, x:BigInt):Tree = {
-    require(isSorted(tree))
-    splay(addBin(tree, x), x)
-  } ensuring {res => contains(res, x) && (content(tree)++Set(x) == content(res)) && isSorted(res)} //
-  
-  def addBin(tree: Tree, x:BigInt):Tree = {
+
+  def add(tree: Tree, x:BigInt):Tree = {
     require(isSorted(tree))// && x > minVal && x < maxVal)
     tree match {
       case Leaf => Node(Leaf, x, Leaf)
       case Node(l, v, r) if (x == v) => tree //nothing to add if already exists
-      case Node(l, v, r) if (x < v) => Node(addBin(l, x), v, r)
-      case Node(l, v, r) if (x > v) => Node(l, v, addBin(r, x))
+      case Node(l, v, r) if (x < v) => Node(add(l, x), v, r)
+      case Node(l, v, r) if (x > v) => Node(l, v, add(r, x))
     }
-  } ensuring {res => contains(res, x) && (content(tree)++Set(x) == content(res)) && isSorted(res)}
+  } ensuring {res => contains(res, x) && (content(tree)++Set(x) == content(res)) && isSorted(res)} //
   
 
   // def remove(tree:Tree, x:BigInt):Tree = {
@@ -141,16 +131,22 @@ object SplayTree {
   }
   
   //supposes that the tree is sorted!! might work if we apply the sorting algorithm to each node
-  def maxTriv(tree: Tree): OptInt = tree match {
-    case Leaf => None
-    case Node(l,v,Leaf) => Some(v)
-    case Node(l,v,r) => maxTriv(r)
+  def maxTriv(tree: Tree): BigInt = {
+    require(tree match {case _:Node => true case Leaf => false})
+    tree match {
+      case Leaf => 0
+      case Node(l,v,Leaf) => v
+      case Node(l,v,r) => maxTriv(r)
+    }
   }
-  def minTriv(tree: Tree): OptInt = tree match {
-    case Leaf => None
-    case Node(Leaf,v,r) => Some(v)
-    case Node(l,v,r) => minTriv(l)
-  }
+  def minTriv(tree: Tree): BigInt = {
+    require(tree match {case _:Node => true case Leaf => false})
+    tree match {
+      case Leaf => 0
+      case Node(Leaf,v,r) => v
+      case Node(l,v,r) => minTriv(l)
+    }
+}
   //also works on unsorted trees
   def maxVal(tree: Tree): OptInt = tree match {
     case Leaf => None
@@ -161,13 +157,13 @@ object SplayTree {
     case Node(l,v,r) => min(min(minVal(l), Some(v)), minVal(r))
   }
   
-  def isSortedTriv(tree:Tree): Boolean = {
+  def isSortedTriv(tree: Tree): Boolean = {
     tree match {
-      case Leaf => true
-      case Node(l,v,r) =>
-        if (!(maxTriv(l) < v)) false
-        else if (!(minTriv(r) > v)) false
-        else isSortedTriv(l) && isSortedTriv(r) //lazy evaluation?
+      case Leaf => true //should only match at root
+      case Node(Leaf, v, Leaf) => true
+      case Node(l@Node(ll, vl, rl), v, Leaf) => (vl < v) && (maxTriv(rl) < v) && isSortedTriv(l)
+      case Node(Leaf, v, r@Node(lr, vr, rr)) => (v < vr) && (v < minTriv(lr)) && isSortedTriv(r)
+      case Node(l@Node(ll, vl, rl),v,r@Node(lr, vr, rr)) => (vl < v) && (v < vr) && (maxTriv(rl) < v) && (v < minTriv(lr)) && isSortedTriv(l) && isSortedTriv(r)
     }
   }
   
@@ -175,7 +171,7 @@ object SplayTree {
   
   //bottum-up "inductive"
   def isSortedBURec(tree:Tree):SResult = tree match {
-    case Leaf => SResult(None, true, None)
+    case Leaf => SResult(None, true, None) //onl
     case Node(l, v, r) =>
       val lx = isSortedBURec(l)
       if (!lx.sorted)
@@ -202,7 +198,7 @@ object SplayTree {
   }
 
   def splay(tree:Tree, v:BigInt):Tree = {
-    require(isSortedTriv(tree)) //works with "isSortedTriv"
+    //require(isSorted(tree)) //&& isSorted(tree, Int.MinValue, Int.MaxValue))
     tree match {
       case Leaf => Leaf //nothing to splay
       case n @ Node(l, x, r) =>
@@ -267,8 +263,9 @@ object SplayTree {
       case Node(l, x, r)                          if (x == v)         => tree //already root
       case Node(Leaf, x, r)                       if (v < x)          => tree //parent
       case Node(l, x, Leaf)                       if (x < v)          => tree //parent
+      case Node(Leaf, x, Leaf)                                        => tree //nothing to splay
       //zig
-      case Node(Node(a, x, b), p, c)              if (x == v)         => Node(a, x, Node(b, p, c)) //zig left
+      case Node(Node(a, x, b), p, c)              if (x == v)         => Node(a, x, Node(b, p, c)) //zig left = if the node is at depth 1
       case Node(Node(a@Leaf, x, b), p, c)         if (v < x)          => Node(a, x, Node(b, p, c))
       case Node(Node(a, x, b@Leaf), p, c)         if (x < v && v < p) => Node(a, x, Node(b, p, c))
       //zag
@@ -298,7 +295,20 @@ object SplayTree {
     }
   }
 
-  //Tests
-  //use argument:Nothing allows to chain several tests as block expressions are not allowed in Leon
 
+  // def getMinAndRemove:(Int, Tree) = {
+  //   require(this match {case n:Node => true case Leaf => false}) //can't remove anything if Leaf
+  //   this match { //or splayMin
+  //     case Node(Leaf, v, r) => (v, r)
+  //     case Node(l, v, r) => l.getMinAndRemove match {case (vn, tn) => (vn, Node(tn, v, r))}
+  //     case Leaf => (-1, this)
+  //   }
+  // 
+  
+  def t2 = require(2 < 1)
+  def testSort1 = t2
+  
+  def t1 = require(add(Node(Node(Leaf, 1, Leaf), 3, Leaf), 2) == Node(Node(Leaf, 1, Node(Leaf, 5, Leaf)), 3, Leaf))
+  def test1 = t1
+  
 }
