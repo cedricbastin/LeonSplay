@@ -62,14 +62,14 @@ object SplayTree {
   case object Leaf extends Tree
 
   def add(tree: Tree, x:BigInt):Tree = {
-    require(isSorted(tree))// && x > minVal && x < maxVal)
+    require(isSorted(tree)) //does just work with isSortedBU
     tree match {
       case Leaf => Node(Leaf, x, Leaf)
-      case Node(l, v, r) if (x == v) => tree //nothing to add if already exists
+      case Node(l, v, r) if (x == v) => tree //value already exists
       case Node(l, v, r) if (x < v) => Node(add(l, x), v, r)
       case Node(l, v, r) if (x > v) => Node(l, v, add(r, x))
     }
-  } ensuring {res => contains(res, x) && (content(tree)++Set(x) == content(res)) && isSorted(res)} //
+  } ensuring {res => content(tree)++Set(x) == content(res)} //isSorted(res) && (content(tree)++Set(x) == content(res)) contains(res, x) && 
   
 
   // def remove(tree:Tree, x:BigInt):Tree = {
@@ -114,8 +114,8 @@ object SplayTree {
 
   //current implementation of isSorted
   def isSorted(tree:Tree):Boolean = {
-    //isSortedOB(tree, None, None)
-    isSortedBURec(tree).sorted
+    //isSortedTD(tree, None, None)
+    isSortedBU(tree).sorted
     //isSortedTriv(tree)
     //isSortedBuggy(tree)
   }
@@ -132,31 +132,30 @@ object SplayTree {
   
   //supposes that the tree is sorted!! might work if we apply the sorting algorithm to each node
   def maxTriv(tree: Tree): BigInt = {
-    require(tree match {case _:Node => true case Leaf => false})
     tree match {
-      case Leaf => 0
+      case Leaf => 0 //should never happen
       case Node(l,v,Leaf) => v
       case Node(l,v,r) => maxTriv(r)
     }
   }
   def minTriv(tree: Tree): BigInt = {
-    require(tree match {case _:Node => true case Leaf => false})
     tree match {
-      case Leaf => 0
+      case Leaf => 0 //should never happen
       case Node(Leaf,v,r) => v
       case Node(l,v,r) => minTriv(l)
     }
 }
   //also works on unsorted trees
-  def maxVal(tree: Tree): OptInt = tree match {
-    case Leaf => None
-    case Node(l,v,r) => max(max(maxVal(l), Some(v)), maxVal(r))
-  }
-  def minVal(tree: Tree): OptInt = tree match {
-    case Leaf => None
-    case Node(l,v,r) => min(min(minVal(l), Some(v)), minVal(r))
-  }
+  // def maxVal(tree: Tree): OptInt = tree match {
+  //   case Leaf => None
+  //   case Node(l,v,r) => max(max(maxVal(l), Some(v)), maxVal(r))
+  // }
+  // def minVal(tree: Tree): OptInt = tree match {
+  //   case Leaf => None
+  //   case Node(l,v,r) => min(min(minVal(l), Some(v)), minVal(r))
+  // }
   
+  //"inductively" induces total soring order
   def isSortedTriv(tree: Tree): Boolean = {
     tree match {
       case Leaf => true //should only match at root
@@ -165,24 +164,6 @@ object SplayTree {
       case Node(Leaf, v, r@Node(lr, vr, rr)) => (v < vr) && (v < minTriv(lr)) && isSortedTriv(r)
       case Node(l@Node(ll, vl, rl),v,r@Node(lr, vr, rr)) => (vl < v) && (v < vr) && (maxTriv(rl) < v) && (v < minTriv(lr)) && isSortedTriv(l) && isSortedTriv(r)
     }
-  }
-  
-  case class SResult(min:OptInt, sorted:Boolean, max:OptInt)
-  
-  //bottum-up "inductive"
-  def isSortedBURec(tree:Tree):SResult = tree match {
-    case Leaf => SResult(None, true, None) //onl
-    case Node(l, v, r) =>
-      val lx = isSortedBURec(l)
-      if (!lx.sorted)
-        SResult(None, false, None) //propagate false early
-      else {
-        val rx = isSortedBURec(r)
-        if (!rx.sorted)
-          SResult(None, false, None) //propagate false early
-        else
-          SResult(lx.min, (lx.sorted && rx.sorted && (lx.min < v) && (rx.max > v)), rx.max)
-      }
   }
 
   //top down "recursive"  
@@ -196,9 +177,33 @@ object SplayTree {
         case (Some(mi), Some(ma)) => val v = Some(vi); (vi > mi) && (vi < ma) && isSortedTD(l, min, v) && isSortedTD(r, v, max)
       }
   }
+  
+  //bottum-up "inductive"
+  case class SResult(min:OptInt, sorted:Boolean, max:OptInt)
+  def isSortedBU(tree:Tree):SResult = tree match {
+    case Leaf => SResult(None, true, None) //should only apply to root node
+    case Node(Leaf, v, Leaf) => SResult(Some(v), true, Some(v))
+    case Node(Leaf, v, r) =>
+      val rx = isSortedBU(r)
+      SResult(Some(v), rx.sorted && rx.min > v, rx.max)
+    case Node(l, v, Leaf) =>
+      val lx = isSortedBU(l)
+      SResult(lx.min, lx.sorted && lx.max < v, Some(v))
+    case Node(l, v, r) =>
+      val lx = isSortedBU(l)
+      if (!lx.sorted)
+        lx //propagate false early
+      else {
+        val rx = isSortedBU(r)
+        if (!rx.sorted)
+          rx //propagate false early
+        else
+          SResult(lx.min, (lx.sorted && rx.sorted && (lx.min < v) && (rx.max > v)), rx.max)
+      }
+  }
 
   def splay(tree:Tree, v:BigInt):Tree = {
-    //require(isSorted(tree)) //&& isSorted(tree, Int.MinValue, Int.MaxValue))
+    require(isSorted(tree)) //&& isSorted(tree, Int.MinValue, Int.MaxValue))
     tree match {
       case Leaf => Leaf //nothing to splay
       case n @ Node(l, x, r) =>
@@ -305,10 +310,16 @@ object SplayTree {
   //   }
   // 
   
-  def t2 = require(2 < 1)
-  def testSort1 = t2
-  
-  def t1 = require(add(Node(Node(Leaf, 1, Leaf), 3, Leaf), 2) == Node(Node(Leaf, 1, Node(Leaf, 5, Leaf)), 3, Leaf))
+  def t1 = require(isSorted(Leaf))
   def test1 = t1
+  def t2 = require(isSorted(Node(Leaf, 5, Leaf)))
+  def test2 = t2
+  def t3 = require(isSorted(Node(Node(Leaf, 2, Leaf), 5, Leaf)))
+  def test3 = t3
+  def t4 = require(!isSorted(Node(Node(Leaf, 2, Node(Leaf, 4, Leaf)), 3, Leaf)))
+  def test4 = t4
+  
+  def t100 = require(add(Node(Node(Leaf, 1, Leaf), 3, Leaf), 2) == Node(Node(Leaf, 1, Node(Leaf, 5, Leaf)), 3, Leaf))
+  def test100 = t100
   
 }
