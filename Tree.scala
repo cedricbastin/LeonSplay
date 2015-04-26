@@ -270,7 +270,7 @@ object SplayTree {
       case Node(l, x, Leaf)                       if (x < v)          => tree //parent
       case Node(Leaf, x, Leaf)                                        => tree //nothing to splay
       //zig
-      case Node(Node(a, x, b), p, c)              if (x == v)         => Node(a, x, Node(b, p, c)) //zig left = if the node is at depth 1
+      case Node(Node(a, x, b), p, c)              if (x == v)         => Node(a, x, Node(b, p, c)) //zig left -> dept 1
       case Node(Node(a@Leaf, x, b), p, c)         if (v < x)          => Node(a, x, Node(b, p, c))
       case Node(Node(a, x, b@Leaf), p, c)         if (x < v && v < p) => Node(a, x, Node(b, p, c))
       //zag
@@ -283,12 +283,9 @@ object SplayTree {
         case Node(a, x, b)                                            => Node(a, x, Node(b, p, Node(c, g, d)))
       }
       case Node(Node(a, p, Node(b, x, c)), g, d)  if (x == v)         => Node(Node(a, p, b), x, Node(c, g, d)) //zig-zag left
-      case Node(Node(a, p, xNode), g, d)          if (p < v && v < g) => splay(xNode, v) match {
+      case Node(Node(a, p, xNode), g, d)          if (p < v && v < g) => splay2(xNode, v) match {
         case Node(b, x, c)                                            => Node(Node(a, p, b), x, Node(c, g, d))
       }
-      //left recursive
-      //verify the following still!
-      
       case Node(d, g, Node(c, p, Node(b, x, a)))  if (x == v)         => Node(Node(Node(d, g, c), p, b), x, a) //zag-zag right
       case Node(d, g, Node(c, p, xNode))          if (g < v && v < p) => splay2(xNode,v) match {
         case Node(b, x, a)                                            => Node(Node(Node(d, g, c), p, b), x, a)
@@ -298,7 +295,7 @@ object SplayTree {
         case Node(c, x, b)                                            => Node(Node(d, g, c), x, Node(b, p, a))
       }
     }
-  }
+  } ensuring {res => (content(tree) == content(res)) }
 
 
   // def getMinAndRemove:(Int, Tree) = {
@@ -318,8 +315,14 @@ object SplayTree {
   def test3 = t3
   def t4 = require(!isSorted(Node(Node(Leaf, 2, Node(Leaf, 4, Leaf)), 3, Leaf)))
   def test4 = t4
+  def t5 = require(isSorted(Node(Node(Leaf, 2, Leaf), 3, Node(Node(Leaf, 4, Leaf), 5, Leaf))))
+  def test5 = t5
+  def t6 = require(!isSorted(Node(Node(Leaf, 2, Leaf), 3, Node(Node(Leaf, 6, Leaf), 5, Leaf))))
+  def test6 = t6
+  def t7 = require(isSorted(Node(Leaf, -BigInt(5), Node(Node(Leaf, -BigInt(4), Leaf), -BigInt(2), Leaf))))
+  def test7 = t7
   
-  def t100 = require(add(Node(Node(Leaf, 1, Leaf), 3, Leaf), 2) == Node(Node(Leaf, 1, Node(Leaf, 5, Leaf)), 3, Leaf))
+  def t100 = require(add(Node(Node(Leaf, 1, Leaf), 3, Leaf), 2) == Node(Node(Leaf, 1, Node(Leaf, 2, Leaf)), 3, Leaf))
   def test100 = t100
   
 }
