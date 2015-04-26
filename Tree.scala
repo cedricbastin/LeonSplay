@@ -160,9 +160,9 @@ object SplayTree {
     tree match {
       case Leaf => true //should only match at root
       case Node(Leaf, v, Leaf) => true
-      case Node(l@Node(ll, vl, rl), v, Leaf) => (vl < v) && (maxTriv(rl) < v) && isSortedTriv(l)
-      case Node(Leaf, v, r@Node(lr, vr, rr)) => (v < vr) && (v < minTriv(lr)) && isSortedTriv(r)
-      case Node(l@Node(ll, vl, rl),v,r@Node(lr, vr, rr)) => (vl < v) && (v < vr) && (maxTriv(rl) < v) && (v < minTriv(lr)) && isSortedTriv(l) && isSortedTriv(r)
+      case Node(l@Node(_, vl, _), v, Leaf) => (vl < v) && (maxTriv(l) < v) && isSortedTriv(l)
+      case Node(Leaf, v, r@Node(_, vr, _)) => (v < vr) && (v < minTriv(r)) && isSortedTriv(r)
+      case Node(l@Node(_, vl, _),v,r@Node(_, vr, _)) => (vl < v) && (v < vr) && (maxTriv(l) < v) && (v < minTriv(r)) && isSortedTriv(l) && isSortedTriv(r)
     }
   }
 
@@ -287,11 +287,11 @@ object SplayTree {
         case Node(b, x, c)                                            => Node(Node(a, p, b), x, Node(c, g, d))
       }
       case Node(d, g, Node(c, p, Node(b, x, a)))  if (x == v)         => Node(Node(Node(d, g, c), p, b), x, a) //zag-zag right
-      case Node(d, g, Node(c, p, xNode))          if (g < v && v < p) => splay2(xNode,v) match {
+      case Node(d, g, Node(c, p, xNode))          if (p < v)          => splay2(xNode,v) match {
         case Node(b, x, a)                                            => Node(Node(Node(d, g, c), p, b), x, a)
       }
       case Node(d, g, Node(Node(c, x, b), p, a))  if (x == v)         => Node(Node(d, g, c), x, Node(b, p, a)) //zag-zig right
-      case Node(d, g, Node(xNode, p, a))          if (p < v)          => splay2(xNode, v) match {
+      case Node(d, g, Node(xNode, p, a))          if (g < v && v < p) => splay2(xNode, v) match {
         case Node(c, x, b)                                            => Node(Node(d, g, c), x, Node(b, p, a))
       }
     }
