@@ -297,6 +297,32 @@ object SplayTree {
     }
   } ensuring {res => (content(tree) == content(res)) }
 
+  def split(tree:Tree, v:BigInt):(Tree, Tree) = {
+    require(isSorted(tree))
+    splay(tree, v) match {
+      case Leaf => (Leaf, Leaf)
+      case Node(l, x, r) if (x == v) => (l, r)
+      case Node(l, x, r) if (x < v) => (Node(l, x, Leaf), r)
+      case Node(l, x, r) if (x > v) => (l, Node(Leaf, x, r))
+    }
+  } ensuring { tup =>
+    (contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)++Set(v))) ||
+    (!contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)))
+  }
+
+def split2(tree:Tree, v:BigInt):(Tree, Tree) = {
+    require(isSorted(tree))
+    splay2(tree, v) match {
+      case Leaf => (Leaf, Leaf)
+      case Node(l, x, r) if (x == v) => (l, r)
+      case Node(l, x, r) if (x < v) => (Node(l, x, Leaf), r)
+      case Node(l, x, r) if (x > v) => (l, Node(Leaf, x, r))
+    }
+  } ensuring { tup =>
+    (contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)++Set(v))) ||
+    (!contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)))
+  }
+
 
   // def getMinAndRemove:(Int, Tree) = {
   //   require(this match {case n:Node => true case Leaf => false}) //can't remove anything if Leaf
