@@ -297,32 +297,58 @@ object SplayTree {
     }
   } ensuring {res => (content(tree) == content(res)) }
 
-  def split(tree:Tree, v:BigInt):(Tree, Tree) = {
-    require(isSorted(tree))
-    splay(tree, v) match {
-      case Leaf => (Leaf, Leaf)
+  // def split(tree:Tree, v:BigInt):(Tree, Tree) = {
+  //   require(isSorted(tree))
+  //   splay(tree, v) match {
+  //     case Leaf => (Leaf, Leaf)
+  //     case Node(l, x, r) if (x == v) => (l, r)
+  //     case Node(l, x, r) if (x < v) => (Node(l, x, Leaf), r)
+  //     case Node(l, x, r) if (x > v) => (l, Node(Leaf, x, r))
+  //   }
+  // } ensuring { tup =>
+  //   (contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)++Set(v))) ||
+  //   (!contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)))
+  // }
+  
+  def splitPartial(tree:Tree, v:BigInt):(Tree, Tree) = {
+    require(isSorted(tree) && contains(tree, v))
+    splay2(tree, v) match {
       case Node(l, x, r) if (x == v) => (l, r)
-      case Node(l, x, r) if (x < v) => (Node(l, x, Leaf), r)
-      case Node(l, x, r) if (x > v) => (l, Node(Leaf, x, r))
     }
   } ensuring { tup =>
-    (contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)++Set(v))) ||
-    (!contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)))
+    (content(tree) == content(tup._1)++content(tup._2)++Set(v))
   }
-
-def split2(tree:Tree, v:BigInt):(Tree, Tree) = {
-    require(isSorted(tree))
+  
+  def splitPartialNotContains(tree:Tree, v:BigInt):(Tree, Tree) = {
+    require(isSorted(tree) && !contains(tree, v))
     splay2(tree, v) match {
       case Leaf => (Leaf, Leaf)
-      case Node(l, x, r) if (x == v) => (l, r)
       case Node(l, x, r) if (x < v) => (Node(l, x, Leaf), r)
       case Node(l, x, r) if (x > v) => (l, Node(Leaf, x, r))
     }
   } ensuring { tup =>
-    (contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)++Set(v))) ||
-    (!contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)))
+    (content(tree) == content(tup._1)++content(tup._2))
   }
+  
+  def moveToRoot(tree:Tree, v:BigInt):BigInt = {
+    require(isSorted(tree) && contains(tree, v))
+    splay2(tree, v) match {
+      case Node(l, x, r) => x
+    }
+  } ensuring { res => res == v} 
 
+  // def split2(tree:Tree, v:BigInt):(Tree, Tree) = {
+  //   require(isSorted(tree) && contains(tree, v))
+  //   splay2(tree, v) match {
+  //     case Leaf => (Leaf, Leaf)
+  //     case Node(l, x, r) if (x == v) => (l, r)
+  //     case Node(l, x, r) if (x < v) => (Node(l, x, Leaf), r)
+  //     case Node(l, x, r) if (x > v) => (l, Node(Leaf, x, r))
+  //   }
+  // } ensuring { tup =>
+  //   (contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)++Set(v))) ||
+  //   (!contains(tree, v) && (content(tree) == content(tup._1)++content(tup._2)))
+  // }
 
   // def getMinAndRemove:(Int, Tree) = {
   //   require(this match {case n:Node => true case Leaf => false}) //can't remove anything if Leaf
@@ -350,5 +376,4 @@ def split2(tree:Tree, v:BigInt):(Tree, Tree) = {
   
   def t100 = require(add(Node(Node(Leaf, 1, Leaf), 3, Leaf), 2) == Node(Node(Leaf, 1, Node(Leaf, 2, Leaf)), 3, Leaf))
   def test100 = t100
-  
 }
