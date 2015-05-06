@@ -330,12 +330,39 @@ object SplayTree {
     (content(tree) == content(tup._1)++content(tup._2))
   }
   
-  def moveToRoot(tree:Tree, v:BigInt):BigInt = {
+  def trivial(tree:Tree, v:BigInt):BigInt = {
+    require(
+      tree match {
+        case Node(_,x,_) => x == v
+        case Leaf => false
+      }
+    )
+    tree match {
+      case Node(a,x,b) => x
+    }
+  } ensuring(res => res == v)
+  
+  def splayToRoot(tree:Tree, v:BigInt):BigInt = {
     require(isSorted(tree) && contains(tree, v))
     splay2(tree, v) match {
       case Node(l, x, r) => x
     }
-  } ensuring { res => res == v} 
+  } ensuring { res => res == v}
+  
+  //does not keep ordering
+  def moveToRoot(tree:Tree, v:BigInt):Tree = {
+    require(isSorted(tree))
+    tree match {
+      case Leaf => Leaf
+      case Node(l,x,r) if (x == v) => tree
+      case Node(Leaf, x, r) if (x < v) => tree //parent
+      case Node(l, x, Leaf) if (x > v) => tree //parent
+      case Node(Node(ll,lx,lr),x,r) if (lx == v) => Node(Node(ll,x,lr),lx,r)
+      case Node(l,x,Node(rl, rx, rr)) if (rx == v) => Node(l,rx,Node(rl, x, rr))
+      case Node(l,x,r) if (v < x) => moveToRoot(l, v) match {case Node(ll,lx,lr) => Node(Node(ll,x,lr),lx,r)}
+      case Node(l,x,r) if (x < v) => moveToRoot(r, v) match {case Node(rl, rx, rr) => Node(l,rx,Node(rl, x, rr))}
+    }
+  }
 
   // def split2(tree:Tree, v:BigInt):(Tree, Tree) = {
   //   require(isSorted(tree) && contains(tree, v))
