@@ -82,7 +82,7 @@ object SplayTree {
   }
   
   def splay(tree:Tree, v:BigInt):Tree = {
-    require(isSorted(tree) && contains(tree, v)) //&& isSorted(tree, Int.MinValue, Int.MaxValue))
+    require(isSorted(tree)) //&& isSorted(tree, Int.MinValue, Int.MaxValue))
     tree match {
       case Leaf => Leaf //nothing to splay
       case n @ Node(l, x, r) =>
@@ -138,7 +138,7 @@ object SplayTree {
         }
 
     }
-  } ensuring {res => (content(tree) == content(res)) && (res match {case Node(_, x, _) if (x == v) => true }) }//isSorted(res)}
+  } ensuring {res => (content(tree) == content(res)) && (res match {case Leaf => true case Node(_, x, _) => if (contains(tree, v)) (x == v) else true}) }//isSorted(res)}
 
   
   def splayToRoot(tree:Tree, v:BigInt):BigInt = {
