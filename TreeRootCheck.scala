@@ -138,7 +138,7 @@ object SplayTree {
         }
 
     }
-  } ensuring {res => (content(tree) == content(res)) && (res match {case Node(_, x, _) => (x == v)}) }//isSorted(res)}
+  } ensuring {res => (content(tree) == content(res)) && (res match {case Node(_, x, _) if (x == v) => true }) }//isSorted(res)}
 
   
   def splayToRoot(tree:Tree, v:BigInt):BigInt = {
