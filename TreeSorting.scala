@@ -82,4 +82,8 @@ object TreeSorting {
           SResult(lx.min, (lx.sorted && rx.sorted && (lx.min < v) && (rx.max > v)), rx.max)
       }
   }
+
+  def listSorted(tree: Tree) = {
+    listIsSorted(toList(tree))
+  }
 }

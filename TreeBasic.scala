@@ -1,5 +1,3 @@
-import TreeSorting._
-
 object TreeBasic {
 
   abstract class Tree
@@ -13,18 +11,40 @@ object TreeBasic {
     }
   }
 
-  def content(t: Tree) : Set[BigInt] = t match {
+  def content(t: Tree): Set[BigInt] = t match {
     case Leaf => Set.empty
     case Node(l, v, r) => content(l) ++ Set(v) ++ content(r) //does order of concatenation influence efficiency?
   }
 
-   def add(tree: Tree, x:BigInt):Tree = {
-     require(isSorted(tree)) //does just work with isSortedBU
-     tree match {
-       case Leaf => Node(Leaf, x, Leaf)
-       case Node(l, v, r) if (x == v) => tree //value already exists
-       case Node(l, v, r) if (x < v) => Node(add(l, x), v, r)
-       case Node(l, v, r) if (x > v) => Node(l, v, add(r, x))
-     }
-   } ensuring {res => content(tree)++Set(x) == content(res)} //isSorted(res) && (content(tree)++Set(x) == content(res)) contains(res, x) &&
-}
+  sealed abstract class List
+  case class Cons(head: BigInt, tail: List) extends List
+  case object Nil extends List
+
+  def append(l1: List, l2: List):List = l1 match {
+  	case Nil => l2
+  	case Cons(head, tail) => Cons(head, append(tail, l2))
+  }
+
+  def toList(t: Tree): List = t match {
+  	case Leaf => Nil
+    case Node(l, v, r) => append(toList(l), Cons(v, toList(r)))
+  }
+
+  def listIsSorted(l:List):Boolean = l match {
+    case Nil => true
+    case Cons(head, tail) => tail match {
+      case Nil => true
+      case c@Cons(thead, ttail) => (head <= thead) && listIsSorted(c)
+    }
+  }
+
+
+  def add(l:List, v:BigInt):List = {
+    require(listIsSorted(l))
+    l match {
+      case Nil => Cons(v, Nil)
+      case c@Cons(head, tail) if (head > v) => Cons(v, c)
+      case Cons(head, tail) => Cons(head, add(tail, v))
+    }
+  } ensuring {res => listIsSorted(res)}
+} 
