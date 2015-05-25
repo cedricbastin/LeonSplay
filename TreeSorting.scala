@@ -1,5 +1,6 @@
 import TreeBasic._
 import OptInt._
+import TreeList._
 
 object TreeSorting {
   //current implementation of isSorted
@@ -8,9 +9,12 @@ object TreeSorting {
     //isSortedBU(tree).sorted
     isSortedTriv(tree)
     //isSortedBuggy(tree)
+    //listSorted(tree)
+    //isSortedCopy(tree)
   }
 
-  //supposes that the tree is sorted!! might work if we apply the sorting algorithm to each node
+  //supposes that the tree is sorted!
+  //if sorting condition is applied inductively on each node it also works
   def maxTriv(tree: Tree): BigInt = {
     tree match {
       case Leaf => 0 //should never happen
@@ -85,5 +89,38 @@ object TreeSorting {
 
   def listSorted(tree: Tree) = {
     listIsSorted(toList(tree))
+  }
+
+
+  //https://github.com/ravimad/leon2015/blob/f70f9f761f8ff63c2ec9d2d64806fae6bd0d76b6/testcases/synthesis/condabd/benchmarks/BinarySearchTree/BinarySearchTreeFull.scala
+  def isSortedMinMax(t: Tree, min: BigInt, max: BigInt): Boolean = t match {
+    case Node(l, v, r) =>
+      isSortedMinMax(l, min, v) &&
+      isSortedMinMax(r, v, max) &&
+      v < max && v > min
+    case _ => true
+  }
+
+  def isSortedMin(t: Tree, min: BigInt): Boolean = t match {
+    case Node(l, v, r) =>
+      isSortedMinMax(l, min, v) &&
+      isSortedMin(r, v) &&
+      v > min
+    case _ => true
+  }
+
+  def isSortedMax(t: Tree, max: BigInt): Boolean = t match {
+    case Node(l, v, r) =>
+      isSortedMax(l, v) &&
+      isSortedMinMax(r, v, max) &&
+      v < max
+    case _ => true
+  }
+
+  def isSortedCopy(t: Tree): Boolean = t match {
+    case Node(l, v, r) =>
+      isSortedMin(r, v) &&
+      isSortedMax(l, v)
+    case _ => true
   }
 }

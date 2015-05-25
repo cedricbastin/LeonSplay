@@ -3,7 +3,7 @@ import TreeSorting._
 
 object TreeSplay {
   def splay(tree:Tree, v:BigInt):Tree = {
-    require(isSorted(tree)) //&& isSorted(tree, Int.MinValue, Int.MaxValue))
+    require(isSorted(tree)) //&& contains(tree, v)
     tree match {
       case Leaf => Leaf //nothing to splay
       case n @ Node(l, x, r) =>
@@ -58,7 +58,7 @@ object TreeSplay {
           }
         }
     }
-  } ensuring {res => (content(tree) == content(res)) && (res match {case Leaf => true case Node(_, x, _) => if (contains(tree, v)) (x == v) else true})}//isSorted(res)}
+  } ensuring {res => (content(tree) == content(res)) }//&& (res match {case Leaf => true case Node(_, x, _) => if (contains(tree, v)) (x == v) else true})}//isSorted(res)}
 
   // def splay2(tree: Tree, v: BigInt):Tree = {
   //   require(isSorted(tree))
