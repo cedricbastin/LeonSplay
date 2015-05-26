@@ -5,6 +5,10 @@ object TreeBasic {
       case Leaf => true
       case _ => false
     }
+    def isRoot(x:BigInt) = this match {
+      case Leaf => false
+      case Node(_, v, _) => (x == v)
+    }
   }
   case class Node(l: Tree, v: BigInt, r: Tree) extends Tree
   case object Leaf extends Tree

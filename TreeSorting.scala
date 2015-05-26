@@ -5,12 +5,11 @@ import TreeList._
 object TreeSorting {
   //current implementation of isSorted
   def isSorted(tree:Tree):Boolean = {
-    //isSortedTD(tree, None, None)
-    //isSortedBU(tree).sorted
-    isSortedTriv(tree)
-    //isSortedBuggy(tree)
-    //listSorted(tree)
-    //isSortedCopy(tree)
+    //isSortedTD(tree, None, None) //not good
+    isSortedBU(tree).sorted //fastest
+    //isSortedTriv(tree) //good
+    //listSorted(tree) //not good
+    //isSortedCopy(tree) //almost as bad as top down 
   }
 
   //supposes that the tree is sorted!
@@ -31,14 +30,14 @@ object TreeSorting {
   }
 
   //also works on unsorted trees
-  def maxVal(tree: Tree): OptInt = tree match {
-    case Leaf => None
-    case Node(l,v,r) => max(max(maxVal(l), Some(v)), maxVal(r))
-  }
-  def minVal(tree: Tree): OptInt = tree match {
-    case Leaf => None
-    case Node(l,v,r) => min(min(minVal(l), Some(v)), minVal(r))
-  }
+  // def maxVal(tree: Tree): OptInt = tree match {
+  //   case Leaf => None
+  //   case Node(l,v,r) => max(max(maxVal(l), Some(v)), maxVal(r))
+  // }
+  // def minVal(tree: Tree): OptInt = tree match {
+  //   case Leaf => None
+  //   case Node(l,v,r) => min(min(minVal(l), Some(v)), minVal(r))
+  // }
   
   //"inductively" induces total soring order
   def isSortedTriv(tree: Tree): Boolean = {
@@ -56,10 +55,14 @@ object TreeSorting {
     case Leaf => true
     case Node(l, vi, r) =>
       (min, max) match {
-        case (None, None) => val v = Some(vi); isSortedTD(l, min, v) && isSortedTD(r, v, max)
-        case (Some(mi), None) => val v = Some(vi); (vi > mi) && isSortedTD(l, min, v) && isSortedTD(r, v, max)
-        case (None, Some(ma)) => val v = Some(vi); (vi < ma) && isSortedTD(l, min, v) && isSortedTD(r, v, max)
-        case (Some(mi), Some(ma)) => val v = Some(vi); (vi > mi) && (vi < ma) && isSortedTD(l, min, v) && isSortedTD(r, v, max)
+        case (None, None) =>
+          val v = Some(vi); isSortedTD(l, min, v) && isSortedTD(r, v, max)
+        case (Some(mi), None) =>
+          val v = Some(vi); (vi > mi) && isSortedTD(l, min, v) && isSortedTD(r, v, max)
+        case (None, Some(ma)) =>
+          val v = Some(vi); (vi < ma) && isSortedTD(l, min, v) && isSortedTD(r, v, max)
+        case (Some(mi), Some(ma)) =>
+          val v = Some(vi); (vi > mi) && (vi < ma) && isSortedTD(l, min, v) && isSortedTD(r, v, max)
       }
   }
   
@@ -93,11 +96,10 @@ object TreeSorting {
 
 
   //https://github.com/ravimad/leon2015/blob/f70f9f761f8ff63c2ec9d2d64806fae6bd0d76b6/testcases/synthesis/condabd/benchmarks/BinarySearchTree/BinarySearchTreeFull.scala
-  def isSortedMinMax(t: Tree, min: BigInt, max: BigInt): Boolean = t match {
+  def isSortedCopy(t: Tree): Boolean = t match {
     case Node(l, v, r) =>
-      isSortedMinMax(l, min, v) &&
-      isSortedMinMax(r, v, max) &&
-      v < max && v > min
+      isSortedMin(r, v) &&
+      isSortedMax(l, v)
     case _ => true
   }
 
@@ -117,10 +119,11 @@ object TreeSorting {
     case _ => true
   }
 
-  def isSortedCopy(t: Tree): Boolean = t match {
+  def isSortedMinMax(t: Tree, min: BigInt, max: BigInt): Boolean = t match {
     case Node(l, v, r) =>
-      isSortedMin(r, v) &&
-      isSortedMax(l, v)
+      isSortedMinMax(l, min, v) &&
+      isSortedMinMax(r, v, max) &&
+      v < max && v > min
     case _ => true
   }
 }
