@@ -5,9 +5,9 @@ import TreeOps._
 import TreeSplit._
 
 object TreeSplayOps {
-  def search(tree: Tree, x:BigInt):BigInt = { //return key or parent key?
+  def search(tree: Tree, x:BigInt):BigInt = { //return key or parent key
     require(isSorted(tree))
-    splay(tree, x) match {
+    splay(tree, x) match { //returns key or parent
       case Leaf => 0 //default value?
       case Node(_, v, _) => v
     }
@@ -17,7 +17,7 @@ object TreeSplayOps {
   def addSplay(tree: Tree, x:BigInt):Tree = {
     require(isSorted(tree))
     splay(addBin(tree, x), x)
-  } ensuring {res => contains(res, x)}
+  } ensuring {res => content(res) == content(tree) ++ Set(x)}
 
   def addSplit(tree:Tree, x:BigInt):Tree = {
     require(isSorted(tree))
@@ -30,10 +30,10 @@ object TreeSplayOps {
    } ensuring {res => contains(res, x)}
 
   //2 possibilities to remove a node:
-  def delete(tree:Tree, x:BigInt):Tree = {
+  def rmSplay(tree:Tree, x:BigInt):Tree = {
     require(isSorted(tree))
     splay(rmBin(tree, x), x) //splay the parent
-  }
+  } ensuring {res => content(res) == content(tree) -- Set(x)}
 
   def deleteJoin(tree:Tree, x:BigInt):Tree = {
     require(isSorted(tree))
@@ -42,13 +42,5 @@ object TreeSplayOps {
       case Node(l, v, r) if (v == x) => join(l,r)
       case tree => tree //did not contain x!
     }
-  }
-
-  def split(tree: Tree, x:BigInt)     = splay(tree, x) match {case Node(l, v, r) => (Node(l, v, Leaf), r)
-  def search(tree: Tree, x:BigInt)    = splay(tree, x)
-  def addSplay(tree: Tree, x:BigInt)  = splay(binAdd(tree, x), x)
-  def addSplit(tree:Tree, x:BigInt)   = split(tree, x) match {case (l, r) => Node(l, x, r)} 
-  def delete(tree:Tree, x:BigInt)     = splay(rmBin(tree, x), x)
-  def deleteJoin(tree:Tree, x:BigInt) = splay(tree, x) match {case Node(l, v, r) if (v == x) => join(l,r)}
-
+  } ensuring {res => content(res) == content(tree) -- Set(x)}
 }

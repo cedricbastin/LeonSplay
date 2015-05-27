@@ -3,10 +3,6 @@ import TreeBasic._
 import TreeSplay._
 
 object Test {
-  def splayToRoot(tree:Tree, v:BigInt) = {
-    require(isSorted(tree) && contains(tree, v))
-    splay(tree, v)
-  } ensuring {res => res match {case Node(_, x, _) => x == v}}
 
   def t1 = require(isSorted(Leaf))
   def test1 = t1
@@ -24,8 +20,8 @@ object Test {
   def test6 = t6
   def t7 = require(isSorted(Node(Leaf, -BigInt(5), Node(Node(Leaf, -BigInt(4), Leaf), -BigInt(2), Leaf))))
   def test7 = t7
-  def tfail = require(isSorted(Node(Leaf, -BigInt(5), Node(Node(Leaf, -BigInt(6), Leaf), -BigInt(2), Leaf))))
-  def testfail = tfail
+  def t8 = require(!isSorted(Node(Leaf, -BigInt(5), Node(Node(Leaf, -BigInt(6), Leaf), -BigInt(2), Leaf))))
+  def test8 = t8
 
   def tsplay1 = require(splay(Node(Leaf, BigInt(5), Leaf), 5) == Node(Leaf, BigInt(5), Leaf))
   def testsplay1 = tsplay1
@@ -40,6 +36,4 @@ object Test {
   def tsplay6 = require(splay(Node(Node(Leaf, BigInt(-1467), Node(Leaf, BigInt(-1466), Leaf)), BigInt(-1465), Leaf), -1466) == Node(Node(Leaf, -1467, Leaf), -1466, Node(Leaf, -1465, Leaf)))
   def testsplay6 = tsplay6
 
-  // def t100 = require(add(Node(Node(Leaf, 1, Leaf), 3, Leaf), 2) == Node(Node(Leaf, 1, Node(Leaf, 2, Leaf)), 3, Leaf))
-  // def test100 = t100
 }

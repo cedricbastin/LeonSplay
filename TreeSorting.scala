@@ -44,9 +44,9 @@ object TreeSorting {
     tree match {
       case Leaf => true //should only match at root
       case Node(Leaf, v, Leaf) => true
-      case Node(l@Node(_, vl, _), v, Leaf) => (vl < v) && (maxTriv(l) < v) && isSortedTriv(l)
-      case Node(Leaf, v, r@Node(_, vr, _)) => (v < vr) && (v < minTriv(r)) && isSortedTriv(r)
-      case Node(l@Node(_, vl, _),v,r@Node(_, vr, _)) => (vl < v) && (v < vr) && (maxTriv(l) < v) && (v < minTriv(r)) && isSortedTriv(l) && isSortedTriv(r)
+      case Node(l@Node(_, vl, _), v, Leaf) => (vl < v) && isSortedTriv(l) && (maxTriv(l) < v)
+      case Node(Leaf, v, r@Node(_, vr, _)) => (v < vr) && isSortedTriv(r) && (v < minTriv(r))
+      case Node(l@Node(_, vl, _),v,r@Node(_, vr, _)) => (vl < v) && (v < vr) && isSortedTriv(l) && isSortedTriv(r) && (maxTriv(l) < v) && (v < minTriv(r))
     }
   }
 

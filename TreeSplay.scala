@@ -58,7 +58,19 @@ object TreeSplay {
           }
         }
     }
-  } ensuring {res => (content(tree) == content(res)) && ((contains(tree, v) && res.isRoot(v)) || !contains(tree, v))}//&& (res match {case Leaf => true case Node(_, x, _) => if (contains(tree, v)) (x == v) else true})}//isSorted(res)}
+  } ensuring {res => (content(tree) == content(res))}
+
+  def splayContains(tree:Tree, x:BigInt):Tree = {
+    require(isSorted(tree) && contains(tree, x))
+    splay(tree, x)
+  } ensuring {res => contains(res, x)}
+
+  def splayNotContains(tree:Tree, x:BigInt):Tree = {
+    require(isSorted(tree) && !contains(tree, x))
+    splay(tree, x)
+  } ensuring {res => !contains(res, x)}
+  //&& ((contains(tree, v) && res.isRoot(v)) || !contains(tree, v))
+  //&& (res match {case Leaf => true case Node(_, x, _) => if (contains(tree, v)) (x == v) else true})}//isSorted(res)}
 
   // def splay2(tree: Tree, v: BigInt):Tree = {
   //   require(isSorted(tree))
