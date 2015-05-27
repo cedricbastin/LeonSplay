@@ -70,7 +70,7 @@ object TreeSorting {
   case class SResult(min:OptInt, sorted:Boolean, max:OptInt)
   def isSortedBU(tree:Tree):SResult = tree match {
     case Leaf => SResult(None, true, None) //should only apply to root node
-    case Node(Leaf, v, Leaf) => SResult(Some(v), true, Some(v))
+    case Node(Leaf, v, Leaf) => SResult(Some(v), true, Some(v)) //new boundaries
     case Node(Leaf, v, r) =>
       val rx = isSortedBU(r)
       SResult(Some(v), rx.sorted && rx.min > v, rx.max)
@@ -86,7 +86,7 @@ object TreeSorting {
         if (!rx.sorted)
           rx //propagate false early
         else
-          SResult(lx.min, (lx.sorted && rx.sorted && (lx.min < v) && (rx.max > v)), rx.max)
+          SResult(lx.min, (lx.sorted && rx.sorted && (lx.max < v) && (rx.min > v)), rx.max)
       }
   }
 

@@ -22,6 +22,8 @@ object Test {
   def test7 = t7
   def t8 = require(!isSorted(Node(Leaf, -BigInt(5), Node(Node(Leaf, -BigInt(6), Leaf), -BigInt(2), Leaf))))
   def test8 = t8
+  def t9 = require(!isSorted(Node(Node(Leaf, BigInt(11143), Leaf), BigInt(11144), Node(Node(Leaf, BigInt(11143), Leaf), BigInt(11146), Leaf))))
+  def test9 = t9
 
   def tsplay1 = require(splay(Node(Leaf, BigInt(5), Leaf), 5) == Node(Leaf, BigInt(5), Leaf))
   def testsplay1 = tsplay1

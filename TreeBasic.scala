@@ -14,10 +14,11 @@ object TreeBasic {
   case object Leaf extends Tree
 
   def contains(tree:Tree, v:BigInt):Boolean = {
-    tree match {
-      case Leaf => false
-      case Node(l, x, r) => (v == x) || contains(l, v) || contains(r, v)
-    }
+  	content(tree).contains(v)
+    // tree match {
+    //   case Leaf => false
+    //   case Node(l, x, r) => (v == x) || contains(l, v) || contains(r, v)
+    // }
   }
 
   def content(t: Tree): Set[BigInt] = t match {

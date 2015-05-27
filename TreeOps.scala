@@ -11,9 +11,7 @@ object TreeOps {
          else if (x < v) {Node(addBin(l, x), v, r)}
          else {Node(l, v, addBin(r, x))}
      }
-   } ensuring {res =>
-     (content(tree)++Set(x) == content(res)) // && isSorted(res)
-   }
+   } ensuring {res => (content(res) == content(tree)++Set(x))} // && isSorted(res)
 
    def rmBin(tree: Tree, x:BigInt):Tree = {
      require(isSorted(tree))
@@ -60,7 +58,7 @@ object TreeOps {
    } ensuring {res => (content(tree) == content(res)) && (res match {case Leaf => true case Node(_,_,Leaf) => true})}
 
    def join(r:Tree, l:Tree):Tree = {
-     require(isSorted(r) && isSorted(l) && ((!r.isLeaf && !l.isLeaf && (maxTriv(l) < minTriv(r))) || (r.isLeaf || l.isLeaf)))
+     require(isSorted(r) && isSorted(l) && ((r.isLeaf || l.isLeaf) || (maxTriv(l) < minTriv(r))))
      (r, l) match {
        case (Leaf, _) => l
        case (_, Leaf) => r

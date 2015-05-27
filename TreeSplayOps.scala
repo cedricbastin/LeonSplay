@@ -35,12 +35,12 @@ object TreeSplayOps {
     splay(rmBin(tree, x), x) //splay the parent
   } ensuring {res => content(res) == content(tree) -- Set(x)}
 
-  def deleteJoin(tree:Tree, x:BigInt):Tree = {
-    require(isSorted(tree))
-    splay(tree, x) match {
-      case Leaf => Leaf
-      case Node(l, v, r) if (v == x) => join(l,r)
-      case tree => tree //did not contain x!
-    }
-  } ensuring {res => content(res) == content(tree) -- Set(x)}
+  // def deleteJoin(tree:Tree, x:BigInt):Tree = {
+  //   require(isSorted(tree))
+  //   splay(tree, x) match {
+  //     case Leaf => Leaf
+  //     case Node(l, v, r) if (v == x) => join(l,r)
+  //     case tree => tree //did not contain x!
+  //   }
+  // } ensuring {res => content(res) == content(tree) -- Set(x)}
 }
